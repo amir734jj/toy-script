@@ -5,4 +5,8 @@
         <LangVersion>9</LangVersion>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="FParsec.CSharp" Version="12.1.0" />
+    </ItemGroup>
+
 </Project>
