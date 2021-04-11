@@ -19,8 +19,6 @@ namespace Core
         public abstract T Visit(VarDeclToken varDeclToken);
         
         public abstract T Visit(CondToken condToken);
-        
-        public abstract T Visit(ReturnToken returnToken);
 
         public T Visit(IToken token)
         {
@@ -32,7 +30,6 @@ namespace Core
                 BlockToken blockToken => Visit(blockToken),
                 FunctionCallToken functionCallToken => Visit(functionCallToken),
                 FunctionDeclToken functionDeclToken => Visit(functionDeclToken),
-                ReturnToken returnToken => Visit(returnToken),
                 VarDeclToken varDeclToken => Visit(varDeclToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(token))
             };

@@ -15,16 +15,12 @@ namespace Core.Logic
 
         public override string Visit(AtomicToken atomicToken)
         {
-            var (value) = atomicToken;
-            
-            return $"{value}";
+            return $"{atomicToken.Value}";
         }
 
         public override string Visit(BlockToken blockToken)
         {
-            var (tokens) = blockToken;
-            
-            return string.Join($";{Environment.NewLine}", tokens.Select(Visit));
+            return string.Join($";{Environment.NewLine}", blockToken.Tokens.Select(Visit));
         }
 
         public override string Visit(FunctionDeclToken functionDeclToken)
@@ -52,14 +48,7 @@ namespace Core.Logic
         {
             var (condition, ifToken, elseToken) = condToken;
             
-            return $"if ({Visit(condition)}) {{ {Visit(ifToken)} }} else {{ {Visit(elseToken)} }}";
-        }
-
-        public override string Visit(ReturnToken returnToken)
-        {
-            var (body) = returnToken;
-
-            return $"return {Visit(body)};";
+            return $"({Visit(condition)}) ? {Visit(ifToken)} : {Visit(elseToken)};";
         }
     }
 }
