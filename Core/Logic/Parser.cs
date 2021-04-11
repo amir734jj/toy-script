@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Core.Interfaces;
@@ -15,9 +16,10 @@ namespace Core.Logic
         public Parser()
         {
             FSharpFunc<CharStream<Unit>, Reply<IToken>> expressionP = null;
-            var expressionRec = Rec(() => expressionP);
+            var expressionRec = Rec(() => expressionP.AndL(WS));
 
-            var nameP = Many1Chars(NoneOf(new[] {'"', ' ', '{', '}', '='})).Label("name");
+            var nameP = Many1Chars(NoneOf(new[] {'"', ' ', '{', '}', '=', '(', ')', '\n'})).Label("name");
+            var variableP = nameP.Map(x => (IToken) new VariableToken(x));
 
             var stringP = Between(CharP('"'), ManyChars(NoneOf(new[] {'"'})), CharP('"')).Label("string")
                 .Map(x => (IToken) new AtomicToken(x));
@@ -44,18 +46,20 @@ namespace Core.Logic
 
             var formalsP = SepBy('(', nameP, ')');
             var functionDeclP = StringP("def").And_(WS1).AndRTry(nameP).AndL(WS).AndTry(formalsP).AndL(WS).AndLTry(CharP('='))
-                .And(WS)
-                .And(expressionRec)
+                .AndL(WS)
+                .AndTry(expressionRec)
                 .Label("def")
                 .Map(x => (IToken) new FunctionDeclToken(x.Item1.Item1, x.Item1.Item2, x.Item2));
 
-            var conditionalP = StringP("if").AndRTry(Between(CharP('(').And(WS), expressionRec, CharP(')')))
-                .AndTry(expressionRec).AndLTry(StringP("else")).AndTry(expressionRec).Label("cond").Map(x =>
+            var conditionalP = StringP("if").And(WS).AndRTry(Between(CharP('(').And(WS), expressionRec, CharP(')')))
+                .AndL(WS)
+                .AndTry(expressionRec).And(WS).AndLTry(StringP("else")).AndL(WS).AndTry(expressionRec).Label("cond")
+                .Map(x =>
                     (IToken) new CondToken(x.Item1.Item1, x.Item1.Item2, x.Item2));
 
             var blockExprP = SepBy('{', expressionRec, '}').Label("block").Map(x => (IToken) new BlockToken(x));
 
-            expressionP = Choice(varDeclP, assignP, atomicP, functionDeclP, conditionalP, blockExprP, functionCallP);
+            expressionP = WS.AndR(Choice(varDeclP, assignP, atomicP, functionDeclP, conditionalP, functionCallP, variableP, blockExprP ));
 
             var tokensP = Many(Choice(expressionRec, commentP), sep: WS, canEndWithSep: true).Map(x => x.ToList());
             
@@ -67,7 +71,7 @@ namespace Core.Logic
         public FSharpFunc<CharStream<Unit>, Reply<List<T>>> SepBy<T>(char start,
             FSharpFunc<CharStream<Unit>, Reply<T>> initial, char end)
         {
-            var arrItems = Many(initial, sep: WS.And(CharP(',')).And(WS));
+            var arrItems = Many(initial, sep: CharP(',').And(WS), canEndWithSep: false);
             var arrayP = Between(CharP(start).And(WS), arrItems, CharP(end))
                 .Map(elems => elems.ToList());
             return arrayP;

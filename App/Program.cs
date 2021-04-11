@@ -9,8 +9,10 @@ namespace App
         static void Main(string[] args)
         {
             var str = @"
-let x = 123
 let y = 123
+y = 456
+def amir(x) = { if (x) x else { z = amir(x) } }
+let z = amir(y)
 ";
 
             var p = new Parser().ParserP.ParseString(str);

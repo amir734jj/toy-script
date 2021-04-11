@@ -16,4 +16,5 @@ namespace Core.Tokens
     public record BlockToken(List<IToken> Tokens) : IToken;
     public record FunctionCallToken(string Name, List<IToken> Actuals) : IToken;
     public record AtomicToken(IConvertible Value) : IToken;
+    public record VariableToken(string Variable) : IToken;
 }
