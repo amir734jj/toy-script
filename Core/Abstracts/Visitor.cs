@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Core.Interfaces;
 using Core.Tokens;
 
-namespace Core
+namespace Core.Abstracts
 {
     public abstract class Visitor<T>
     {
@@ -19,6 +21,8 @@ namespace Core
         public abstract T Visit(VarDeclToken varDeclToken);
         
         public abstract T Visit(CondToken condToken);
+        
+        public abstract T Visit(VariableToken variableToken);
 
         public T Visit(IToken token)
         {
@@ -31,8 +35,15 @@ namespace Core
                 FunctionCallToken functionCallToken => Visit(functionCallToken),
                 FunctionDeclToken functionDeclToken => Visit(functionDeclToken),
                 VarDeclToken varDeclToken => Visit(varDeclToken),
+                VariableToken variableToken => Visit(variableToken),
+                IgnoredToken => default,
                 _ => throw new ArgumentOutOfRangeException(nameof(token))
             };
+        }
+
+        public List<T> Visit(params IToken[] tokens)
+        {
+            return tokens.Select(Visit).Where(x => x != null).ToList();
         }
     }
 }

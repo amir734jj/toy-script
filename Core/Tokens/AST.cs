@@ -9,12 +9,17 @@ namespace System.Runtime.CompilerServices
 
 namespace Core.Tokens
 {
-    public record AssignToken(string Variable, IToken Body) : IToken;
-    public record CondToken(IToken Condition, IToken IfToken, IToken ElseToken) : IToken;
-    public record VarDeclToken(string Variable, IToken Body) : IToken;
-    public record FunctionDeclToken(string Name, List<string> Formals, IToken Body) : IToken;
-    public record BlockToken(List<IToken> Tokens) : IToken;
-    public record FunctionCallToken(string Name, List<IToken> Actuals) : IToken;
-    public record AtomicToken(IConvertible Value) : IToken;
-    public record VariableToken(string Variable) : IToken;
+    public record Token(Guid Id) : IToken;
+
+    public record IgnoredToken(Guid Id) : Token(Id);
+    
+    public record AssignToken(string Variable, IToken Body) : Token(Guid.NewGuid());
+    public record CondToken(IToken Condition, IToken IfToken, IToken ElseToken) : Token(Guid.NewGuid());
+    public record VarDeclToken(string Variable, IToken Body) : Token(Guid.NewGuid());
+    public record FunctionDeclToken(string Name, List<string> Formals, IToken Body) : Token(Guid.NewGuid());
+    public record BlockToken(List<IToken> Tokens) : Token(Guid.NewGuid());
+    public record FunctionCallToken(string Name, List<IToken> Actuals) : Token(Guid.NewGuid());
+    public record AtomicToken(IConvertible Value) : Token(Guid.NewGuid());
+    public record VariableToken(string Variable) : Token(Guid.NewGuid());
+    public record CommentToken(string Text) : IgnoredToken(Guid.NewGuid());
 }

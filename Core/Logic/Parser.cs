@@ -38,7 +38,7 @@ namespace Core.Logic
                 .Label("assign")
                 .Map(x => (IToken) new VarDeclToken(x.Item1, x.Item2));
 
-            var commentP = StringP("//").AndR(ManyChars(NoneOf(new[] {'\n'}))).Label("comment").Map(_ => (IToken) null);
+            var commentP = StringP("//").AndR(ManyChars(NoneOf(new[] {'\n'}))).Label("comment").Map(x => (IToken) new CommentToken(x));
 
             var actualsP = SepBy('(', expressionRec, ')');
             var functionCallP = nameP.AndLTry(WS).AndTry(actualsP).Label("app")
@@ -61,9 +61,9 @@ namespace Core.Logic
 
             expressionP = WS.AndR(Choice(varDeclP, assignP, atomicP, functionDeclP, conditionalP, functionCallP, variableP, blockExprP ));
 
-            var tokensP = Many(Choice(expressionRec, commentP), sep: WS, canEndWithSep: true).Map(x => x.ToList());
-            
-            ParserP = tokensP;
+            var tokensP = Many(Choice(commentP, expressionRec), sep: WS, canEndWithSep: true).Map(x => x.ToList());
+
+            ParserP = WS.AndR(tokensP);
         }
 
         public FSharpFunc<CharStream<Unit>, Reply<List<IToken>>> ParserP { get; }

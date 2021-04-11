@@ -1,10 +1,11 @@
 using System;
 using System.Linq;
+using Core.Abstracts;
 using Core.Tokens;
 
 namespace Core.Logic
 {
-    public class JSCodeGen : Visitor<string>
+    public class JsCodeGen : Visitor<string>
     {
         public override string Visit(AssignToken assignToken)
         {
@@ -34,7 +35,7 @@ namespace Core.Logic
         {
             var (name, actuals) = functionCallToken;
 
-            return $"{name}({string.Join(", ", actuals.Select(Visit))});";
+            return $"{name}({string.Join(", ", actuals.Select(Visit))})";
         }
 
         public override string Visit(VarDeclToken varDeclToken)
@@ -48,7 +49,12 @@ namespace Core.Logic
         {
             var (condition, ifToken, elseToken) = condToken;
             
-            return $"({Visit(condition)}) ? {Visit(ifToken)} : {Visit(elseToken)};";
+            return $"if ({Visit(condition)}) {{ {Visit(ifToken)} }} else {{ {Visit(elseToken)} }}";
+        }
+
+        public override string Visit(VariableToken variableToken)
+        {
+            return variableToken.Variable;
         }
     }
 }
