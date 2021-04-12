@@ -36,7 +36,7 @@ namespace Core.Logic
 
             var assignP = nameP.AndL(WS).AndLTry(CharP('=')).AndL(WS).AndTry(expressionRec)
                 .Label("assign")
-                .Map(x => (IToken) new VarDeclToken(x.Item1, x.Item2));
+                .Map(x => (IToken) new AssignToken(x.Item1, x.Item2));
 
             var commentP = StringP("//").AndR(ManyChars(NoneOf(new[] {'\n'}))).Label("comment").Map(x => (IToken) new CommentToken(x));
 
@@ -45,11 +45,13 @@ namespace Core.Logic
                 .Map(x => (IToken) new FunctionCallToken(x.Item1, x.Item2));
 
             var formalsP = SepBy('(', nameP, ')');
-            var functionDeclP = StringP("def").And_(WS1).AndRTry(nameP).AndL(WS).AndTry(formalsP).AndL(WS).AndLTry(CharP('='))
+            var functionDeclP = StringP("def").AndTry_(WS1).AndRTry(nameP).AndL(WS).AndTry(formalsP).AndL(WS)
+                .AndLTry(CharP('='))
                 .AndL(WS)
                 .AndTry(expressionRec)
                 .Label("def")
-                .Map(x => (IToken) new FunctionDeclToken(x.Item1.Item1, x.Item1.Item2, x.Item2));
+                .Map(x => (IToken) new FunctionDeclToken(x.Item1.Item1,
+                    x.Item1.Item2.Select(y => (IToken) new VariableToken(y)).ToList(), x.Item2));
 
             var conditionalP = StringP("if").And(WS).AndRTry(Between(CharP('(').And(WS), expressionRec, CharP(')')))
                 .AndL(WS)

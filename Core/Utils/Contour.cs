@@ -1,35 +1,27 @@
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+using Core.Interfaces;
 
 namespace Core.Utils
 {
-    public class Contour<T>
+    public record Contour(Contour Parent, ImmutableDictionary<string, IToken> Table)
     {
-        private readonly Dictionary<string, T> _table;
-
-        private Contour<T> _parent;
-
-        public Contour(): this(new Dictionary<string, T>())
+        public static Contour Empty()
         {
-            
+            return new(null, ImmutableDictionary<string, IToken>.Empty);
         }
         
-        public Contour(Dictionary<string, T> immediate)
+        public bool Lookup(string key, out IToken result)
         {
-            _table = immediate;
-        }
-        
-        public bool Lookup(string key, out T result)
-        {
-            if (_table.ContainsKey(key))
+            if (Table.ContainsKey(key))
             {
-                result = _table[key];
+                result = Table[key];
                 return true;
             }
 
-            if (_parent != null)
+            if (Parent != null)
             {
-                return _parent.Lookup(key, out result);
+                return Parent.Lookup(key, out result);
             }
 
             result = default;
@@ -37,26 +29,30 @@ namespace Core.Utils
             return false;
         }
         
-        public T Add(string key, T value)
+        public Contour Append(string key, IToken value)
         {
-            return _table[key] = value;
-        }
-
-        public Contour<T> Pop()
-        {
-            return _parent;
+            return new(Parent, Table.Add(key, value));
         }
         
-        public Contour<T> Push()
+        public Contour AppendMany(params (string key, IToken value)[] items)
         {
-            return new Contour<T>
+            var current = Table;
+            
+            foreach (var (key, value) in items)
             {
-                _parent = this
-            };
+                current = current.Add(key, value);
+            }
+
+            return new Contour(Parent, current);
+        }
+
+        public Contour Push()
+        {
+            return new(this, ImmutableDictionary<string, IToken>.Empty);
         }
 
         [IndexerName("Item")]
-        public T this[string key]
+        public IToken this[string key]
         {
             get
             {
