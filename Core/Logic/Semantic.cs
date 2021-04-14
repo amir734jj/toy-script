@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Core.Abstracts;
 using Core.Interfaces;
@@ -9,17 +8,19 @@ using Core.Utils;
 
 namespace Core.Logic
 {
-    public record Semant(Semant Parent, IToken Token, Contour Contour);
+    public record Semant(Semant Parent, IToken Token, Contour Contour, HashSet<string> Errors);
 
-    public class Semantic : Visitor<IReadOnlyList<Semant>>
+    internal class Semantic : Visitor<IReadOnlyList<Semant>>
     {
         private Semant _parent;
 
         private Contour _contour = Contour.Empty();
 
+        private readonly HashSet<string> _errors = new();
+
         public override IReadOnlyList<Semant> Visit(AssignToken assignToken)
         {
-            _parent = new Semant(_parent, assignToken, _contour);
+            _parent = new Semant(_parent, assignToken, _contour, _errors);
 
             var bodyResult = Visit(assignToken.Body);
 
@@ -28,12 +29,12 @@ namespace Core.Logic
 
         public override IReadOnlyList<Semant> Visit(AtomicToken atomicToken)
         {
-            return new Semant[] { new(_parent, atomicToken, _contour) };
+            return new Semant[] { new(_parent, atomicToken, _contour, _errors) };
         }
 
         public override IReadOnlyList<Semant> Visit(BlockToken blockToken)
         {
-            _parent = new Semant(_parent, blockToken, _contour);
+            _parent = new Semant(_parent, blockToken, _contour, _errors);
 
             var bodyResult = blockToken.Tokens.SelectMany(Visit);
 
@@ -42,27 +43,27 @@ namespace Core.Logic
 
         public override IReadOnlyList<Semant> Visit(FunctionDeclToken functionDeclToken)
         {
-            var prevScope = _contour;
+            var prevScope = _contour;   // backup contour
 
             _contour = _contour
                 .Push()
                 .Append(functionDeclToken.Name, functionDeclToken)
                 .AppendMany(functionDeclToken.Formals.Select(x => (((VariableToken) x).Variable, x)).ToArray());
 
-            _parent = new Semant(_parent, functionDeclToken, _contour);
+            _parent = new Semant(_parent, functionDeclToken, _contour, _errors);
 
             var bodyResult = Visit(functionDeclToken.Body);
 
             var result = bodyResult.Concat(new[] {_parent}).ToList();
 
-            _contour = prevScope;
+            _contour = prevScope;   // restore contour
 
             return result;
         }
 
         public override IReadOnlyList<Semant> Visit(FunctionCallToken functionCallToken)
         {
-            _parent = new Semant(_parent, functionCallToken, _contour);
+            _parent = new Semant(_parent, functionCallToken, _contour, _errors);
 
             var bodyResult = functionCallToken.Actuals.SelectMany(Visit);
 
@@ -72,7 +73,7 @@ namespace Core.Logic
         public override IReadOnlyList<Semant> Visit(VarDeclToken varDeclToken)
         {
             _contour = _contour.Append(varDeclToken.Variable, varDeclToken);
-            _parent = new Semant(_parent, varDeclToken, _contour);
+            _parent = new Semant(_parent, varDeclToken, _contour, _errors);
 
             var bodyResult = Visit(varDeclToken.Body);
 
@@ -81,7 +82,7 @@ namespace Core.Logic
 
         public override IReadOnlyList<Semant> Visit(CondToken condToken)
         {
-            _parent = new Semant(_parent, condToken, _contour);
+            _parent = new Semant(_parent, condToken, _contour, _errors);
 
             var bodyResult = Visit(condToken.Condition).Concat(Visit(condToken.IfToken)).Concat(Visit(condToken.ElseToken));
 
@@ -92,10 +93,15 @@ namespace Core.Logic
         {
             if (_contour[variableToken.Variable] == null)
             {
-                throw new Exception("Unbound variable");
+                _errors.Add("Unbound variable " + variableToken.Variable);
             }
             
-            return new[] {new Semant(_parent, variableToken, _contour)};
+            return new[] {new Semant(_parent, variableToken, _contour, _errors)};
+        }
+
+        public override IReadOnlyList<Semant> Visit(IgnoredToken ignoredToken)
+        {
+            return new[] {new Semant(_parent, ignoredToken, _contour, _errors)};
         }
     }
 }

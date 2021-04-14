@@ -56,5 +56,10 @@ namespace Core.Logic
         {
             return variableToken.Variable;
         }
+
+        public override string Visit(IgnoredToken ignoredToken)
+        {
+            return string.Empty;
+        }
     }
 }

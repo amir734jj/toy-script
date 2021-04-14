@@ -3,7 +3,7 @@ using Core.Tokens;
 
 namespace Core.Extensions
 {
-    public static class SemantExtension
+    internal static class SemantExtension
     {
         public static bool IsInsideFunction(this Semant semant)
         {

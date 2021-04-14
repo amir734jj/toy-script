@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Core.Interfaces;
@@ -11,7 +10,7 @@ using static FParsec.CSharp.CharParsersCS; // pre-defined parsers
 
 namespace Core.Logic
 {
-    public class Parser
+    internal class Parser
     {
         public Parser()
         {

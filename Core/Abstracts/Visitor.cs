@@ -24,9 +24,11 @@ namespace Core.Abstracts
         
         public abstract T Visit(VariableToken variableToken);
 
+        public abstract T Visit(IgnoredToken ignoredToken);
+        
         public T Visit(IToken token)
         {
-            return token switch
+            var result = token switch
             {
                 CondToken condToken => Visit(condToken),
                 AssignToken assignToken => Visit(assignToken),
@@ -36,14 +38,20 @@ namespace Core.Abstracts
                 FunctionDeclToken functionDeclToken => Visit(functionDeclToken),
                 VarDeclToken varDeclToken => Visit(varDeclToken),
                 VariableToken variableToken => Visit(variableToken),
-                IgnoredToken => default,
+                IgnoredToken ignoredToken => Visit(ignoredToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(token))
             };
+
+            Table[token] = result;
+
+            return result;
         }
 
         public List<T> Visit(params IToken[] tokens)
         {
             return tokens.Select(Visit).Where(x => x != null).ToList();
         }
+
+        public IDictionary<IToken, T> Table = new Dictionary<IToken, T>();
     }
 }

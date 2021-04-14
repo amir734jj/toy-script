@@ -7,6 +7,7 @@
 
     <ItemGroup>
       <PackageReference Include="FParsec.CSharp" Version="12.1.0" />
+      <PackageReference Include="Tamarack" Version="1.0.0" />
     </ItemGroup>
 
 </Project>
