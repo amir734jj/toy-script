@@ -1,3 +1,4 @@
+using Core.Interfaces;
 using Core.Logic;
 using Core.Tokens;
 
@@ -5,19 +6,16 @@ namespace Core.Extensions
 {
     internal static class SemantExtension
     {
-        public static bool IsInsideFunction(this Semant semant)
+        public static bool IsInsideFunction(this Semantic semant, IToken token)
         {
-            var current = semant?.Parent;
-            while (current != null)
+            while (token != null)
             {
-                switch (current.Token)
+                if (token is FunctionDeclToken)
                 {
-                    case FunctionDeclToken:
-                        return true;
-                    default:
-                        current = current.Parent;
-                        break;
+                    return true;
                 }
+                
+                token = semant.LookupTable[token].Parent;
             }
 
             return false;

@@ -11,16 +11,16 @@ namespace Core.Pipeline
         {
             var semantic = new Semantic();
 
-            var semants = context.AST.SelectMany(x => semantic.Visit(x)).ToList();
+            var semants = semantic.Visit(context.AST.ToArray());
             
             if (semants.All(x => x.Errors.Count == 0))
             {
-                context.Semants = semants;
+                context.Semants = semants.First().LookupTable;
                 
                 return executeNext(context);
             }
 
-            context.Error = "Semantic Check Step Failed: " + string.Join(',', semants.SelectMany(x => x.Errors));
+            context.Error = "Semantic Check Step Failed: " + string.Join(", ", semants.SelectMany(x => x.Errors).Distinct());
 
             return context;
         }

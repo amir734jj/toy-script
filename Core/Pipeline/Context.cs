@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Core.Interfaces;
 using Core.Logic;
+using Core.Utils;
 
 namespace Core.Pipeline
 {
@@ -14,7 +15,8 @@ namespace Core.Pipeline
         
         public string JSCode { get; set; }
         
-        public List<Semant> Semants { get; set; }
+        public IDictionary<IToken, (IToken Parent, Contour contour)> Semants { get; set; }
+        
         public List<IType> Types { get; set; }
     }
 }

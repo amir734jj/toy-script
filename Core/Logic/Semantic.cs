@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Core.Abstracts;
@@ -8,100 +7,194 @@ using Core.Utils;
 
 namespace Core.Logic
 {
-    public record Semant(Semant Parent, IToken Token, Contour Contour, HashSet<string> Errors);
-
-    internal class Semantic : Visitor<IReadOnlyList<Semant>>
+    public class Semantic : Visitor<Semantic>
     {
-        private Semant _parent;
-
         private Contour _contour = Contour.Empty();
+        
+        private IToken _currentNode;
 
-        private readonly HashSet<string> _errors = new();
-
-        public override IReadOnlyList<Semant> Visit(AssignToken assignToken)
+        public Semantic()
         {
-            _parent = new Semant(_parent, assignToken, _contour, _errors);
-
-            var bodyResult = Visit(assignToken.Body);
-
-            return bodyResult.Concat(new[] {_parent}).ToList();
+            LookupTable = new Dictionary<IToken, (IToken Parent, Contour contour)>();
+            Errors = new HashSet<string>();
         }
 
-        public override IReadOnlyList<Semant> Visit(AtomicToken atomicToken)
+        public override Semantic Visit(AssignToken assignToken)
         {
-            return new Semant[] { new(_parent, atomicToken, _contour, _errors) };
+            var currentContour = _contour;
+            var currentParentNode = _currentNode;
+
+            _contour = _contour.Push();
+            _currentNode = assignToken;
+
+            var (variable, token) = assignToken;
+            if (_contour[variable] == null)
+            {
+                Errors.Add($"Unbound variable {variable}");
+            }
+
+            Visit(token);
+
+            _contour = currentContour;
+            _currentNode = currentParentNode;
+
+            LookupTable[assignToken] = (_currentNode, _contour);
+
+            return this;
         }
 
-        public override IReadOnlyList<Semant> Visit(BlockToken blockToken)
+        public override Semantic Visit(AtomicToken atomicToken)
         {
-            _parent = new Semant(_parent, blockToken, _contour, _errors);
-
-            var bodyResult = blockToken.Tokens.SelectMany(Visit);
-
-            return bodyResult.Concat(new[] {_parent}).ToList();
+            LookupTable[atomicToken] = (_currentNode, _contour);
+            
+            return this;
         }
 
-        public override IReadOnlyList<Semant> Visit(FunctionDeclToken functionDeclToken)
+        public override Semantic Visit(BlockToken blockToken)
         {
-            var prevScope = _contour;   // backup contour
+            var currentContour = _contour;
+            var currentParentNode = _currentNode;
 
+            _contour = _contour.Push();
+            _currentNode = blockToken;
+
+            foreach (var token in blockToken.Tokens)
+            {
+                Visit(token);
+            }
+
+            _contour = currentContour;
+            _currentNode = currentParentNode;
+
+            LookupTable[blockToken] = (_currentNode, _contour);
+
+            return this;
+        }
+
+        public override Semantic Visit(FunctionDeclToken functionDeclToken)
+        {
+            _contour = _contour.Append(functionDeclToken.Name, functionDeclToken);
+            
+            var currentContour = _contour;
+            var currentParentNode = _currentNode;
+
+            _contour = _contour.Push();
+            _currentNode = functionDeclToken;
+            
             _contour = _contour
                 .Push()
-                .Append(functionDeclToken.Name, functionDeclToken)
                 .AppendMany(functionDeclToken.Formals.Select(x => (((VariableToken) x).Variable, x)).ToArray());
+            
+            Visit(functionDeclToken.Body);
 
-            _parent = new Semant(_parent, functionDeclToken, _contour, _errors);
+            _contour = currentContour;
+            _currentNode = currentParentNode;
 
-            var bodyResult = Visit(functionDeclToken.Body);
+            LookupTable[functionDeclToken] = (_currentNode, _contour);
 
-            var result = bodyResult.Concat(new[] {_parent}).ToList();
-
-            _contour = prevScope;   // restore contour
-
-            return result;
+            return this;
         }
 
-        public override IReadOnlyList<Semant> Visit(FunctionCallToken functionCallToken)
+        public override Semantic Visit(FunctionCallToken functionCallToken)
         {
-            _parent = new Semant(_parent, functionCallToken, _contour, _errors);
+            var currentContour = _contour;
+            var currentParentNode = _currentNode;
 
-            var bodyResult = functionCallToken.Actuals.SelectMany(Visit);
-
-            return bodyResult.Concat(new[] {_parent}).ToList();
-        }
-
-        public override IReadOnlyList<Semant> Visit(VarDeclToken varDeclToken)
-        {
-            _contour = _contour.Append(varDeclToken.Variable, varDeclToken);
-            _parent = new Semant(_parent, varDeclToken, _contour, _errors);
-
-            var bodyResult = Visit(varDeclToken.Body);
-
-            return bodyResult.Concat(new[] {_parent}).ToList();
-        }
-
-        public override IReadOnlyList<Semant> Visit(CondToken condToken)
-        {
-            _parent = new Semant(_parent, condToken, _contour, _errors);
-
-            var bodyResult = Visit(condToken.Condition).Concat(Visit(condToken.IfToken)).Concat(Visit(condToken.ElseToken));
-
-            return bodyResult.Concat(new[] {_parent}).ToList();
-        }
-
-        public override IReadOnlyList<Semant> Visit(VariableToken variableToken)
-        {
-            if (_contour[variableToken.Variable] == null)
+            if (_contour[functionCallToken.Name] == null)
             {
-                _errors.Add("Unbound variable " + variableToken.Variable);
+                Errors.Add($"{functionCallToken.Name} function is unbound");
             }
             
-            return new[] {new Semant(_parent, variableToken, _contour, _errors)};
+            foreach (var actual in functionCallToken.Actuals)
+            {
+                _contour = _contour.Push();
+                Visit(actual);
+                _contour = currentContour;
+            }
+            
+            _contour = currentContour;
+            _currentNode = currentParentNode;
+
+            LookupTable[functionCallToken] = (_currentNode, _contour);
+
+            return this;
         }
 
-        public override IReadOnlyList<Semant> Visit(IgnoredToken ignoredToken)
+        public override Semantic Visit(VarDeclToken varDeclToken)
         {
-            return new[] {new Semant(_parent, ignoredToken, _contour, _errors)};
+            var currentContour = _contour;
+            var currentParentNode = _currentNode;
+
+            _contour = _contour.Push();
+            _currentNode = varDeclToken;
+
+            var (variable, token) = varDeclToken;
+
+            Visit(token);
+
+            _contour = currentContour;
+            _currentNode = currentParentNode;
+
+            if (_contour[variable] != null)
+            {
+                Errors.Add($"Redefinition of variable {variable}");
+            }
+            else
+            {
+                _contour = _contour.Append(variable, varDeclToken);
+            }
+            
+            LookupTable[varDeclToken] = (_currentNode, _contour);
+
+            return this;
         }
+
+        public override Semantic Visit(CondToken condToken)
+        {
+            var currentContour = _contour;
+            var currentParentNode = _currentNode;
+
+            _currentNode = condToken;
+            
+            _contour = _contour.Push();
+            Visit(condToken.Condition);
+            _contour = currentContour;
+            
+            _contour = _contour.Push();
+            Visit(condToken.IfToken);
+            _contour = currentContour;
+            
+            _contour = _contour.Push();
+            Visit(condToken.ElseToken);
+            _contour = currentContour;
+            
+            _currentNode = currentParentNode;
+            LookupTable[condToken] = (_currentNode, _contour);
+
+            return this;
+        }
+
+        public override Semantic Visit(VariableToken variableToken)
+        {
+            LookupTable[variableToken] = (_currentNode, _contour);
+            
+            if (_contour[variableToken.Variable] == null)
+            {
+                Errors.Add($"Unbound variable {variableToken.Variable}");
+            }
+
+            return this;
+        }
+
+        public override Semantic Visit(IgnoredToken ignoredToken)
+        {
+            LookupTable[ignoredToken] = (_currentNode, _contour);
+            
+            return this;
+        }
+
+        public IDictionary<IToken, (IToken Parent, Contour contour)> LookupTable { get; }
+        
+        public HashSet<string> Errors { get; set; }
     }
 }

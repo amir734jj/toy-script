@@ -17,7 +17,7 @@ namespace Core.Logic
             FSharpFunc<CharStream<Unit>, Reply<IToken>> expressionP = null;
             var expressionRec = Rec(() => expressionP.AndL(WS));
 
-            var nameP = Many1Chars(NoneOf(new[] {'"', ' ', '{', '}', '=', '(', ')', '\n'})).Label("name");
+            var nameP = Many1Chars(NoneOf(new[] {'"', ' ', '{', '}', '=', '(', ')', '\n', ';', ','})).Label("name");
             var variableP = nameP.Map(x => (IToken) new VariableToken(x));
 
             var stringP = Between(CharP('"'), ManyChars(NoneOf(new[] {'"'})), CharP('"')).Label("string")

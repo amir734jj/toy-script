@@ -42,8 +42,6 @@ namespace Core.Abstracts
                 _ => throw new ArgumentOutOfRangeException(nameof(token))
             };
 
-            Table[token] = result;
-
             return result;
         }
 
@@ -51,7 +49,5 @@ namespace Core.Abstracts
         {
             return tokens.Select(Visit).Where(x => x != null).ToList();
         }
-
-        public IDictionary<IToken, T> Table = new Dictionary<IToken, T>();
     }
 }
