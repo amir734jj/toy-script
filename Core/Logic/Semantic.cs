@@ -102,9 +102,9 @@ namespace Core.Logic
 
             if (_contour[functionCallToken.Name] == null)
             {
-                Errors.Add($"{functionCallToken.Name} function is unbound");
+                Errors.Add($"{functionCallToken.Name} function to be invoked is unbound");
             }
-            
+
             foreach (var actual in functionCallToken.Actuals)
             {
                 _contour = _contour.Push();

@@ -11,11 +11,11 @@ namespace Core.Pipeline
         {
             var semantic = new Semantic();
 
-            var semants = semantic.Visit(context.AST.ToArray());
+            var semants = semantic.Visit(context.AST);
             
             if (semants.All(x => x.Errors.Count == 0))
             {
-                context.Semants = semants.First().LookupTable;
+                context.Semants = semants.FirstOrDefault() ?? new Semantic();
                 
                 return executeNext(context);
             }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Core.Abstracts;
+using Core.Pipeline;
 using Core.Tokens;
 
 namespace Core.Logic
@@ -24,6 +25,13 @@ namespace Core.Logic
 
     public class TypeInterference : Visitor<IType>
     {
+        private readonly Context _context;
+
+        public TypeInterference(Context context)
+        {
+            _context = context;
+        }
+        
         public override IType Visit(AssignToken assignToken)
         {
             return Visit(assignToken.Body);
@@ -48,6 +56,8 @@ namespace Core.Logic
 
         public override IType Visit(FunctionCallToken functionCallToken)
         {
+            var functionDecl = _context.Semants.LookupTable[functionCallToken].contour[functionCallToken.Name];
+
             return new AnyT();
         }
 

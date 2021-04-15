@@ -8,11 +8,11 @@ namespace Core.Pipeline
     {
         public Context Execute(Context context, Func<Context, Context> executeNext)
         {
-            var codeGen = new JsCodeGen();
+            var codeGen = new JsCodeGen(context);
 
-            context.JSCode = string.Join(Environment.NewLine, codeGen.Visit(context.AST.ToArray()));
+            context.JSCode = string.Join(Environment.NewLine, codeGen.Visit(context.AST));
 
-            return context;
+            return executeNext(context);
         }
     }
 }

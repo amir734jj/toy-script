@@ -69,7 +69,7 @@ namespace Core.Logic
 
         public FSharpFunc<CharStream<Unit>, Reply<List<IToken>>> ParserP { get; }
 
-        public FSharpFunc<CharStream<Unit>, Reply<List<T>>> SepBy<T>(char start,
+        private FSharpFunc<CharStream<Unit>, Reply<List<T>>> SepBy<T>(char start,
             FSharpFunc<CharStream<Unit>, Reply<T>> initial, char end)
         {
             var arrItems = Many(initial, sep: CharP(',').And(WS), canEndWithSep: false);

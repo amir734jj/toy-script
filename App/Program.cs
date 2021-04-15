@@ -16,9 +16,9 @@ def amir(x, y) = { if (x) x else { z = amir(y) } }
 z = amir(y)
 ";
 
-            var result = new ToyScript().Analyze(code);
+            var result = new ToyScript().Compile(code);
 
-            Console.WriteLine(result.Error);
+            Console.WriteLine(result);
         }
     }
 }

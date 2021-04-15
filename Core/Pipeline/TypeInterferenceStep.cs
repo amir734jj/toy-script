@@ -9,13 +9,13 @@ namespace Core.Pipeline
     {
         public Context Execute(Context context, Func<Context, Context> executeNext)
         {
-            var typeInterference = new TypeInterference();
+            var typeInterference = new TypeInterference(context);
 
-            var types = context.AST.Select(x => typeInterference.Visit(x)).ToList();
+            var types = typeInterference.Visit(context.AST);
             
             context.Types = types;
 
-            return context;
+            return executeNext(context);
         }
     }
 }

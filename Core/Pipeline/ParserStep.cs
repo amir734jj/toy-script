@@ -16,7 +16,7 @@ namespace Core.Pipeline
 
             if (status == ReplyStatus.Ok)
             {
-                context.AST = result;
+                context.AST = result.ToArray();
                 
                 return executeNext(context);
             }
