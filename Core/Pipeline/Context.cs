@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Core.Interfaces;
 using Core.Logic;
-using Core.Utils;
+using Core.Models;
 
 namespace Core.Pipeline
 {
@@ -15,8 +15,8 @@ namespace Core.Pipeline
         
         public string JSCode { get; set; }
         
-        public Semantic Semants { get; set; }
+        public IDictionary<IToken, Semant> Semants { get; set; }
         
-        public List<IType> Types { get; set; }
+        public IDictionary<IToken, IType>  Types { get; set; }
     }
 }

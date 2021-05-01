@@ -8,6 +8,8 @@ namespace Core.Abstracts
 {
     public abstract class Visitor<T>
     {
+        public IDictionary<IToken, T> Flatten = new Dictionary<IToken, T>();
+        
         public abstract T Visit(AssignToken assignToken);
         
         public abstract T Visit(AtomicToken atomicToken);
@@ -23,6 +25,8 @@ namespace Core.Abstracts
         public abstract T Visit(CondToken condToken);
         
         public abstract T Visit(VariableToken variableToken);
+        
+        public abstract T Visit(AddToken addToken);
 
         public abstract T Visit(IgnoredToken ignoredToken);
         
@@ -38,11 +42,12 @@ namespace Core.Abstracts
                 FunctionDeclToken functionDeclToken => Visit(functionDeclToken),
                 VarDeclToken varDeclToken => Visit(varDeclToken),
                 VariableToken variableToken => Visit(variableToken),
+                AddToken addToken => Visit(addToken),
                 IgnoredToken ignoredToken => Visit(ignoredToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(token))
             };
 
-            return result;
+            return Flatten[token] = result;
         }
 
         public List<T> Visit(params IToken[] tokens)

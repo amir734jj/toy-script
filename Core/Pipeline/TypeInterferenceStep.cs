@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Core.Logic;
 using Tamarack.Pipeline;
 
@@ -11,9 +10,9 @@ namespace Core.Pipeline
         {
             var typeInterference = new TypeInterference(context);
 
-            var types = typeInterference.Visit(context.AST);
-            
-            context.Types = types;
+            typeInterference.Visit(context.AST);
+
+            context.Types = typeInterference.Flatten;
 
             return executeNext(context);
         }

@@ -1,14 +1,13 @@
 using System;
 using System.Linq;
 using Core.Abstracts;
-using Core.Extensions;
 using Core.Interfaces;
 using Core.Pipeline;
 using Core.Tokens;
 
 namespace Core.Logic
 {
-    public class JsCodeGen : Visitor<string>
+    internal class JsCodeGen : Visitor<string>
     {
         private readonly Context _context;
 
@@ -17,14 +16,6 @@ namespace Core.Logic
             _context = context;
         }
 
-        private string GetPrefix(IToken token)
-        {
-            var isInsideFunction = _context.Semants.IsInsideFunction(token, out var functionDecl);
-            var exitNodes = _context.Semants.ExitNodes(functionDecl);
-
-            return isInsideFunction && exitNodes.Contains(token) ? "return " : string.Empty;
-        }
-        
         public override string Visit(AssignToken assignToken)
         {
             var (variable, token) = assignToken;
@@ -39,15 +30,27 @@ namespace Core.Logic
 
         public override string Visit(BlockToken blockToken)
         {
-            return string.Join($";{Environment.NewLine}", blockToken.Tokens
-                .Select((x, i) => i + 1 == blockToken.Tokens.Count ? GetPrefix(x) + $"return {Visit(x)}" : Visit(x)));
+            var content = string.Join(Environment.NewLine, blockToken.Tokens
+                .Select((x, i) =>
+                {
+                    var prefix = string.Empty;
+
+                    if (i + 1 == blockToken.Tokens.Count)
+                    {
+                        prefix = "return ";
+                    }
+
+                    return prefix + Visit(x);
+                }));
+            
+            return @$"(() => {{ {content} }})()";
         }
 
         public override string Visit(FunctionDeclToken functionDeclToken)
         {
             var (name, formals, body) = functionDeclToken;
 
-            return $@"function {name}({string.Join(", ", formals.Select(x => ((VariableToken)x).Variable))} {{ {Visit(body)} }}";
+            return $@"function {name}({string.Join(", ", formals.Select(x => ((VariableToken)x).Variable))}) {{ return {Visit(body)} }}";
         }
 
         public override string Visit(FunctionCallToken functionCallToken)
@@ -61,19 +64,24 @@ namespace Core.Logic
         {
             var (variable, token) = varDeclToken;
 
-            return $"var {variable} = {Visit(token)};";
+            return $"var {variable} = {Visit(token)}";
         }
 
         public override string Visit(CondToken condToken)
         {
             var (condition, ifToken, elseToken) = condToken;
             
-            return $"if ({Visit(condition)}) {{ {Visit(ifToken)} }} else {{ {Visit(elseToken)} }}";
+            return $"({Visit(condition)}) ? {Visit(ifToken)} : {Visit(elseToken)}";
         }
 
         public override string Visit(VariableToken variableToken)
         {
-            return GetPrefix(variableToken) + variableToken.Variable;
+            return variableToken.Variable;
+        }
+
+        public override string Visit(AddToken addToken)
+        {
+            return $"{Visit(addToken.Left)} + {Visit(addToken.Right)}";
         }
 
         public override string Visit(IgnoredToken ignoredToken)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Core.Interfaces;
@@ -15,7 +16,10 @@ namespace Core.Logic
         public Parser()
         {
             FSharpFunc<CharStream<Unit>, Reply<IToken>> expressionP = null;
+            FSharpFunc<CharStream<Unit>, Reply<IToken>> operatorParser = null;
+            
             var expressionRec = Rec(() => expressionP.AndL(WS));
+            var operatorParserRec = Rec(() => operatorParser.AndL(WS));
 
             var nameP = Many1Chars(NoneOf(new[] {'"', ' ', '{', '}', '=', '(', ')', '\n', ';', ','})).Label("name");
             var variableP = nameP.Map(x => (IToken) new VariableToken(x));
@@ -60,9 +64,23 @@ namespace Core.Logic
 
             var blockExprP = SepBy('{', expressionRec, '}').Label("block").Map(x => (IToken) new BlockToken(x));
 
-            expressionP = WS.AndR(Choice(varDeclP, assignP, atomicP, functionDeclP, conditionalP, functionCallP, variableP, blockExprP ));
+            
+            expressionP = WS.AndR(Choice(varDeclP, assignP, atomicP, functionDeclP, conditionalP, functionCallP, variableP, blockExprP));
 
-            var tokensP = Many(Choice(commentP, expressionRec), sep: WS, canEndWithSep: true).Map(x => x.ToList());
+            operatorParser =
+                WS.And(new OPPBuilder<Unit, IToken, Unit>()
+                    .WithOperators(ops => ops
+                        .AddInfix("+", 10, WS, (x, y) => new AddToken(x, y))
+                        .AddInfix("-", 10, WS, (x, y) => new SubtractToken(x, y))
+                        .AddInfix("*", 20, WS, (x, y) => new MultiplyToken(x, y))
+                        .AddInfix("/", 20, WS, (x, y) => new DivideToken(x, y)))
+                    .WithTerms(term => Choice(
+                        expressionP.And(WS),
+                        Between(CharP('(').And(WS), term, CharP(')').And(WS))))
+                    .Build()
+                    .ExpressionParser);
+
+            var tokensP = Many(Choice(commentP, operatorParser), sep: WS, canEndWithSep: true).Map(x => x.ToList());
 
             ParserP = WS.AndR(tokensP);
         }

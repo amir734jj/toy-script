@@ -9,10 +9,10 @@ namespace App
         {
             var code = @"
 // Hello world
-let y = 123
+let y = 123 + 2
 y = 456
 let z = -1
-def amir(x, y) = { if (x) x else { z = amir(y) } }
+def amir(x, y) = if (x) x else { z = amir(y) }
 z = amir(y)
 ";
 

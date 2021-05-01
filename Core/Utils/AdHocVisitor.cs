@@ -68,6 +68,11 @@ namespace Core.Utils
             return _adHocVisitor(variableToken);
         }
 
+        public override T Visit(AddToken addToken)
+        {
+            return _adHocVisitor(addToken);
+        }
+
         public override T Visit(IgnoredToken ignoredToken)
         {
             return _adHocVisitor(ignoredToken);

@@ -56,7 +56,7 @@ namespace Core.Logic
 
         public override IType Visit(FunctionCallToken functionCallToken)
         {
-            var functionDecl = _context.Semants.LookupTable[functionCallToken].contour[functionCallToken.Name];
+            // var functionDecl = _context.Semants.LookupTable[functionCallToken].contour[functionCallToken.Name];
 
             return new AnyT();
         }
@@ -74,6 +74,11 @@ namespace Core.Logic
         public override IType Visit(VariableToken variableToken)
         {
             return new AnyT();
+        }
+
+        public override IType Visit(AddToken addToken)
+        {
+            return new PrimitiveT();
         }
 
         public override IType Visit(IgnoredToken ignoredToken)

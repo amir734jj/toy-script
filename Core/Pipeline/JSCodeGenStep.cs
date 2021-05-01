@@ -4,7 +4,7 @@ using Tamarack.Pipeline;
 
 namespace Core.Pipeline
 {
-    public class JSCodeGenStep : IFilter<Context, Context>
+    internal class JSCodeGenStep : IFilter<Context, Context>
     {
         public Context Execute(Context context, Func<Context, Context> executeNext)
         {

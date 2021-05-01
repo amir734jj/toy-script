@@ -1,65 +1,61 @@
-using System.Collections.Immutable;
-using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+using System.Linq;
 using Core.Interfaces;
 
 namespace Core.Utils
 {
-    public record Contour(Contour Parent, ImmutableDictionary<string, IToken> Table)
+    internal record Context(Context Parent, IDictionary<string, IToken> Table);
+
+    internal class Contour : IContour
     {
-        public static Contour Empty()
-        {
-            return new(null, ImmutableDictionary<string, IToken>.Empty);
-        }
+        private Context _context = new(null, new Dictionary<string, IToken>());
         
         public bool Lookup(string key, out IToken result)
         {
-            if (Table.ContainsKey(key))
-            {
-                result = Table[key];
-                return true;
-            }
+            var current = _context;
 
-            if (Parent != null)
+            while (current != null)
             {
-                return Parent.Lookup(key, out result);
+                if (_context.Table.ContainsKey(key))
+                {
+                    result = _context.Table[key];
+                    return true;
+                }
+                
+                current = current.Parent;
             }
 
             result = default;
             
             return false;
         }
-        
-        public Contour Append(string key, IToken value)
+
+        public IContour Push()
         {
-            return new(Parent, Table.Add(key, value));
-        }
-        
-        public Contour AppendMany(params (string key, IToken value)[] items)
-        {
-            var current = Table;
-            
-            foreach (var (key, value) in items)
+            return new Contour
             {
-                current = current.Add(key, value);
-            }
-
-            return new Contour(Parent, current);
+                _context = new Context(_context, new Dictionary<string, IToken>())
+            };
         }
 
-        public Contour Push()
+        public IContour Append(params (string name, IToken value)[] pairs)
         {
-            return new(this, ImmutableDictionary<string, IToken>.Empty);
-        }
+            var table = _context.Table
+                .Concat(pairs.Select(x => new KeyValuePair<string, IToken>(x.name, x.value)))
+                .ToDictionary(x => x.Key, x => x.Value);
 
-        [IndexerName("Item")]
-        public IToken this[string key]
-        {
-            get
+            return new Contour
             {
-                Lookup(key, out var result);
+                _context = _context with {Table = table}
+            };
+        }
 
-                return result;
-            }
+        public object Clone()
+        {
+            return new Contour
+            {
+                _context = _context with { Table = _context.Table }
+            };
         }
     }
 }

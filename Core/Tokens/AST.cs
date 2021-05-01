@@ -1,25 +1,34 @@
 using System;
 using System.Collections.Generic;
 using Core.Interfaces;
-
-namespace System.Runtime.CompilerServices
-{
-    internal static class IsExternalInit {}
-}
+using Core.Models;
 
 namespace Core.Tokens
 {
-    public record Token(Guid Id) : IToken;
+    public record IgnoredToken : Token;
 
-    public record IgnoredToken(Guid Id) : Token(Id);
+    public record AssignToken(string Variable, IToken Body) : Token;
+
+    public record CondToken(IToken Condition, IToken IfToken, IToken ElseToken) : Token;
+
+    public record VarDeclToken(string Variable, IToken Body) : Token;
+
+    public record FunctionDeclToken(string Name, List<IToken> Formals, IToken Body) : Token;
+    public record BlockToken(List<IToken> Tokens) : Token;
+
+    public record FunctionCallToken(string Name, List<IToken> Actuals) : Token;
+
+    public record AddToken(IToken Left, IToken Right) : Token;
     
-    public record AssignToken(string Variable, IToken Body) : Token(Guid.NewGuid());
-    public record CondToken(IToken Condition, IToken IfToken, IToken ElseToken) : Token(Guid.NewGuid());
-    public record VarDeclToken(string Variable, IToken Body) : Token(Guid.NewGuid());
-    public record FunctionDeclToken(string Name, List<IToken> Formals, IToken Body) : Token(Guid.NewGuid());
-    public record BlockToken(List<IToken> Tokens) : Token(Guid.NewGuid());
-    public record FunctionCallToken(string Name, List<IToken> Actuals) : Token(Guid.NewGuid());
-    public record AtomicToken(IConvertible Value) : Token(Guid.NewGuid());
-    public record VariableToken(string Variable) : Token(Guid.NewGuid());
-    public record CommentToken(string Text) : IgnoredToken(Guid.NewGuid());
+    public record SubtractToken(IToken Left, IToken Right) : IgnoredToken;
+    
+    public record DivideToken(IToken Left, IToken Right) : IgnoredToken;
+    
+    public record MultiplyToken(IToken Left, IToken Right) : IgnoredToken;
+
+    public record AtomicToken(IConvertible Value) : Token;
+
+    public record VariableToken(string Variable) : Token;
+
+    public record CommentToken(string Text) : IgnoredToken;
 }
