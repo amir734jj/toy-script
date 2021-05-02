@@ -27,6 +27,12 @@ namespace Core.Abstracts
         public abstract T Visit(VariableToken variableToken);
         
         public abstract T Visit(AddToken addToken);
+        
+        public abstract T Visit(MultiplyToken multiplyToken);
+        
+        public abstract T Visit(SubtractToken subtractToken);
+        
+        public abstract T Visit(DivideToken divideToken);
 
         public abstract T Visit(IgnoredToken ignoredToken);
         
@@ -43,6 +49,9 @@ namespace Core.Abstracts
                 VarDeclToken varDeclToken => Visit(varDeclToken),
                 VariableToken variableToken => Visit(variableToken),
                 AddToken addToken => Visit(addToken),
+                MultiplyToken addToken => Visit(addToken),
+                DivideToken divideToken => Visit(divideToken),
+                SubtractToken subtractToken => Visit(subtractToken),
                 IgnoredToken ignoredToken => Visit(ignoredToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(token))
             };

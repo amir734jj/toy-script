@@ -73,6 +73,21 @@ namespace Core.Utils
             return _adHocVisitor(addToken);
         }
 
+        public override T Visit(MultiplyToken multiplyToken)
+        {
+            return _adHocVisitor(multiplyToken);
+        }
+
+        public override T Visit(SubtractToken subtractToken)
+        {
+            return _adHocVisitor(subtractToken);
+        }
+
+        public override T Visit(DivideToken divideToken)
+        {
+            return _adHocVisitor(divideToken);
+        }
+
         public override T Visit(IgnoredToken ignoredToken)
         {
             return _adHocVisitor(ignoredToken);

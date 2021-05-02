@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Core.Interfaces;
@@ -63,7 +62,6 @@ namespace Core.Logic
                     (IToken) new CondToken(x.Item1.Item1, x.Item1.Item2, x.Item2));
 
             var blockExprP = SepBy('{', expressionRec, '}').Label("block").Map(x => (IToken) new BlockToken(x));
-
             
             expressionP = WS.AndR(Choice(varDeclP, assignP, atomicP, functionDeclP, conditionalP, functionCallP, variableP, blockExprP));
 
@@ -76,9 +74,12 @@ namespace Core.Logic
                         .AddInfix("/", 20, WS, (x, y) => new DivideToken(x, y)))
                     .WithTerms(term => Choice(
                         expressionP.And(WS),
-                        Between(CharP('(').And(WS), term, CharP(')').And(WS))))
+                        Between(CharP('(').And(WS), term, CharP(')').And(WS)))
+                    )
                     .Build()
-                    .ExpressionParser);
+                    .ExpressionParser
+                    .Label("operator")
+                );
 
             var tokensP = Many(Choice(commentP, operatorParser), sep: WS, canEndWithSep: true).Map(x => x.ToList());
 

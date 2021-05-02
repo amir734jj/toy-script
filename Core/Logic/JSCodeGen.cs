@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using Core.Abstracts;
-using Core.Interfaces;
 using Core.Pipeline;
 using Core.Tokens;
 
@@ -82,6 +81,21 @@ namespace Core.Logic
         public override string Visit(AddToken addToken)
         {
             return $"{Visit(addToken.Left)} + {Visit(addToken.Right)}";
+        }
+
+        public override string Visit(MultiplyToken multiplyToken)
+        {
+            return $"{Visit(multiplyToken.Left)} * {Visit(multiplyToken.Right)}";
+        }
+
+        public override string Visit(SubtractToken subtractToken)
+        {
+            return $"{Visit(subtractToken.Left)} - {Visit(subtractToken.Right)}";
+        }
+
+        public override string Visit(DivideToken divideToken)
+        {
+            return $"{Visit(divideToken.Left)} / {Visit(divideToken.Right)}";
         }
 
         public override string Visit(IgnoredToken ignoredToken)

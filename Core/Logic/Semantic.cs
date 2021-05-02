@@ -185,6 +185,60 @@ namespace Core.Logic
             return new Semant(addToken, _parent.Value, _contour.Value);
         }
 
+        public override Semant Visit(MultiplyToken multiplyToken)
+        {
+            var currentParent = _parent.Mark();
+            var currentContour = _contour.Mark();
+            
+            _parent.Apply(_ => multiplyToken);
+            Visit(multiplyToken.Left);
+            _parent.Restore(currentParent);
+            _contour.Restore(currentContour);
+            
+            _parent.Apply(_ => multiplyToken);
+            Visit(multiplyToken.Right);
+            _parent.Restore(currentParent);
+            _contour.Restore(currentContour);
+
+            return new Semant(multiplyToken, _parent.Value, _contour.Value);
+        }
+
+        public override Semant Visit(SubtractToken subtractToken)
+        {
+            var currentParent = _parent.Mark();
+            var currentContour = _contour.Mark();
+            
+            _parent.Apply(_ => subtractToken);
+            Visit(subtractToken.Left);
+            _parent.Restore(currentParent);
+            _contour.Restore(currentContour);
+            
+            _parent.Apply(_ => subtractToken);
+            Visit(subtractToken.Right);
+            _parent.Restore(currentParent);
+            _contour.Restore(currentContour);
+
+            return new Semant(subtractToken, _parent.Value, _contour.Value);
+        }
+
+        public override Semant Visit(DivideToken divideToken)
+        {
+            var currentParent = _parent.Mark();
+            var currentContour = _contour.Mark();
+            
+            _parent.Apply(_ => divideToken);
+            Visit(divideToken.Left);
+            _parent.Restore(currentParent);
+            _contour.Restore(currentContour);
+            
+            _parent.Apply(_ => divideToken);
+            Visit(divideToken.Right);
+            _parent.Restore(currentParent);
+            _contour.Restore(currentContour);
+
+            return new Semant(divideToken, _parent.Value, _contour.Value);
+        }
+
         public override Semant Visit(IgnoredToken ignoredToken)
         {
             return new(ignoredToken, _parent.Value, _contour.Value);

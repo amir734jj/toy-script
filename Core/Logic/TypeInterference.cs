@@ -81,6 +81,21 @@ namespace Core.Logic
             return new PrimitiveT();
         }
 
+        public override IType Visit(MultiplyToken multiplyToken)
+        {
+            return new PrimitiveT();
+        }
+
+        public override IType Visit(SubtractToken subtractToken)
+        {
+            return new PrimitiveT();
+        }
+
+        public override IType Visit(DivideToken divideToken)
+        {
+            return new PrimitiveT();
+        }
+
         public override IType Visit(IgnoredToken ignoredToken)
         {
             return new UnitT();
