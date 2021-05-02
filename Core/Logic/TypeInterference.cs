@@ -21,7 +21,6 @@ namespace Core.Logic
     public record FunctionT(List<IType> FormalsTypes, IType ReturnType) : IType;
     
     public record AnyT : IType;
-    
 
     public class TypeInterference : Visitor<IType>
     {
