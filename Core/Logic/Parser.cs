@@ -53,7 +53,7 @@ namespace Core.Logic
                 .AndTry(expressionRec)
                 .Label("def")
                 .Map(x => (IToken) new FunctionDeclToken(x.Item1.Item1,
-                    x.Item1.Item2.Select(y => (IToken) new VariableToken(y)).ToList(), x.Item2));
+                    x.Item1.Item2.Select(y =>new VariableToken(y)).ToList(), x.Item2));
 
             var conditionalP = StringP("if").And(WS).AndRTry(Between(CharP('(').And(WS), expressionRec, CharP(')')))
                 .AndL(WS)

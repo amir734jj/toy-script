@@ -8,7 +8,7 @@ namespace Core.Abstracts
 {
     public abstract class Visitor<T>
     {
-        public IDictionary<IToken, T> Flatten = new Dictionary<IToken, T>();
+        public readonly IDictionary<IToken, T> Flatten = new Dictionary<IToken, T>();
         
         public abstract T Visit(AssignToken assignToken);
         
@@ -63,5 +63,7 @@ namespace Core.Abstracts
         {
             return tokens.Select(Visit).Where(x => x != null).ToList();
         }
+        
+        protected virtual AfterEach() 
     }
 }

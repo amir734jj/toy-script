@@ -13,7 +13,7 @@ namespace Core.Tokens
 
     public record VarDeclToken(string Variable, IToken Body) : Token;
 
-    public record FunctionDeclToken(string Name, List<IToken> Formals, IToken Body) : Token;
+    public record FunctionDeclToken(string Name, List<VariableToken> Formals, IToken Body) : Token;
     public record BlockToken(List<IToken> Tokens) : Token;
 
     public record FunctionCallToken(string Name, List<IToken> Actuals) : Token;

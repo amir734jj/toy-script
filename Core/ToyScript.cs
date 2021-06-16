@@ -11,7 +11,6 @@ namespace Core
             var pipeline = new Pipeline<Context, Context>()
                 .Add<ParserStep>()
                 .Add<SemanticStep>()
-                .Add<TypeInterferenceStep>()
                 .Finally(ctx => ctx);
 
             var result = pipeline.Execute(new Context {Code = code});
@@ -29,7 +28,6 @@ namespace Core
             var pipeline = new Pipeline<Context, Context>()
                 .Add<ParserStep>()
                 .Add<SemanticStep>()
-                .Add<TypeInterferenceStep>()
                 .Add<JSCodeGenStep>()
                 .Finally(ctx => ctx);
 

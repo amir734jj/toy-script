@@ -16,7 +16,5 @@ namespace Core.Pipeline
         public string JSCode { get; set; }
         
         public IDictionary<IToken, Semant> Semants { get; set; }
-        
-        public IDictionary<IToken, IType>  Types { get; set; }
     }
 }
